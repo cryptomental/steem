@@ -273,12 +273,17 @@ namespace detail {
 
             auto is_outdated = [&]() -> bool
             {
-               if( !fc::exists( _data_dir / "db_version" ) )
+               if( !fc::exists( _data_dir / "db_version" ) ) {
+                  elog("db_version not found!");
                   return true;
+               }
                std::string version_str;
                fc::read_file_contents( _data_dir / "db_version", version_str );
+               ilog(version_str);
+               ilog(GRAPHENE_CURRENT_DB_VERSION);
                return (version_str != GRAPHENE_CURRENT_DB_VERSION);
             };
+
             if( !is_new() && is_outdated() )
             {
                ilog("Replaying blockchain due to version upgrade");
