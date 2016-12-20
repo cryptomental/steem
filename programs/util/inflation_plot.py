@@ -4,6 +4,7 @@ import datetime
 import json
 import sys
 
+import numpy
 import matplotlib
 matplotlib.use("Agg")
 
@@ -23,7 +24,7 @@ y9 = []
 y10 = []
 y11 = []
 
-names = ["Curate", "Content", "Producer", "Liquidity", "PoW"]
+names = ["Curator", "Content", "Producer", "Liquidity", "PoW"]
 inflections = {}
 markers = []
 
@@ -32,8 +33,8 @@ shapes = iter("ovx+")
 
 ax = plt.gca()
 
-plt.axis([0,10,5e9,320e9])
-ax.set_xticks(range(11))
+plt.axis([0, 1, 10e6, 5e9])
+ax.set_xticks(range(13))
 ax.set_yscale("log")
 ax.tick_params(axis="y", which="minor", left="off", right="off")
 ax.tick_params(axis="y2", which="minor", left="off", right="off")
@@ -46,13 +47,14 @@ ax.tick_params(axis="y8", which="minor", left="off", right="off")
 ax.tick_params(axis="y9", which="minor", left="off", right="off")
 ax.tick_params(axis="y10", which="minor", left="off", right="off")
 ax.tick_params(axis="y11", which="minor", left="off", right="off")
-ax.set_yticks([10e6, 20e6, 40e6, 80e6, 160e6, 320e6, 640e6, 1300e6, 2600e6, 5200e6, 10e9, 20e9, 40e9, 80e9, 160e9, 320e9])
-ax.set_yticklabels(["10M", "20M", "40M", "80M", "160M", "320M", "640M", "1.3B", "2.6B", "5.2B", "10B", "20B", "40B", "80B", "160B", "320B"])
-ax.set_ylabel("Supply [STEEM]")
-ax.set_xlabel("Time [Years]")
+ax.set_yticks([1e6, 10e6, 20e6, 30e6, 40e6, 50e6, 60e6, 70e6, 80e6])
+ax.set_yticklabels(["1M", "10M", "20M", "30M", "40M", "50M", "60M", "70M"])
+ax.set_ylabel("Supply [GOLOS]")
+ax.set_xlabel("Time [Months]")
 plt.grid(True, which="major", linestyle="-")
 
 BLOCKS_PER_YEAR = 20*60*24*365
+BLOCKS_PER_MONTH = BLOCKS_PER_YEAR / 12.0
 
 with open(sys.argv[1], "r") as f:
     n = 0
@@ -73,7 +75,7 @@ with open(sys.argv[1], "r") as f:
         pow_rewards = int(d['rvec'][8])/1000.0
         vesting_rewards_balancing_pow_rewards = int(d['rvec'][9])/1000.0
 
-        px = block / float(BLOCKS_PER_YEAR)
+        px = block / float(BLOCKS_PER_MONTH)
         py = total_supply / 1000.0
         x.append(px)
         y.append(py)
@@ -93,16 +95,19 @@ with open(sys.argv[1], "r") as f:
                 continue
             if names[i] in inflections:
                 continue
-            if (int(d["rvec"][i*2])%1000) == 0:
+            if (int(d["rvec"][i*2]) % 1000) == 0:
                 continue
             inflections[names[i]] = d["b"]
-            markers.append([[[px],[py],next(colors)+next(shapes)], {"label" : "Starting of "+names[i]}])
+            markers.append([[[px], [py], next(colors)+next(shapes)], {"label": "Starting of "+names[i]}])
+
+        if block > BLOCKS_PER_YEAR:
+            break
 
 plt.plot(x, y, label='Total Supply')
 plt.plot(x, y2, label='Curation rewards')
 plt.plot(x, y3, label='Vesting rewards balancing curation rewards')
 plt.plot(x, y4, linestyle=":", label='Content rewards')
-plt.plot(x, y5, linestyle=":",label='Vesting rewards balancing content rewards')
+plt.plot(x, y5, linestyle=":", label='Vesting rewards balancing content rewards')
 plt.plot(x, y6, label='Producer rewards')
 plt.plot(x, y7, label='Vesting rewards balancing producer rewards')
 plt.plot(x, y8, linestyle=":", label='Liquidity rewards')
@@ -113,5 +118,5 @@ for m in markers:
     print(m)
     plt.plot(*m[0], **m[1])
 lgd = plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-plt.title("10-year STEEM supply projection from inflation model")
+plt.title("First year GOLOS supply projection from inflation model")
 plt.savefig('supply.png', dpi=150, format='png', bbox_extra_artists=(lgd,), bbox_inches='tight')
